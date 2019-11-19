@@ -1,0 +1,57 @@
+{
+  "variables": {
+    "customer": "{{env `customer_name`}}",
+    "warfile": "{{env `b_wf`}}",
+    "version": "{{env `version`}}",
+    "build_region": "{{env `b_rgn`}}",
+    "build_vpc": "{{env `b_vpc`}}",
+    "build_sn": "{{env `b_sn`}}",
+    "build_sg": "{{env `b_sg`}}",
+    "build_source_ami": "{{env `b_ami`}}",
+    "BUILD_URL": "{{env `BUILD_URL`}}",
+    "GIT_URL": "{{env `GIT_URL`}}",
+    "GIT_BRANCH": "{{env `GIT_BRANCH`}}",
+    "GIT_COMMIT": "{{env `GIT_COMMIT`}}"
+  }, 
+  "builders": [{
+    "type": "amazon-ebs",
+    "profile": "default",
+      "region": "{{user `build_region`}}",
+      "vpc_id": "{{user `build_vpc`}}",
+      "subnet_id": "{{user `build_sn`}}",
+      "security_group_id":"{{user `build_sg`}}",
+    "associate_public_ip_address": true,
+    "source_ami": "{{user `build_source_ami`}}",
+    "instance_type": "t2.large",
+    "ssh_username": "centos",
+    "ami_name": "iqapp_amq_svc_{{user `customer`}}-{{timestamp}}",
+    "iam_instance_profile": "stc-packerbuild-secrets-accessrole",
+    "tags": {
+      "SourceAMI": "{{ .SourceAMI}}",
+      "OS":         "centos7",
+      "Name":       "iqapp_amq_svc_{{user `customer`}}-{{timestamp}}", 
+      "Version": "{{user `version`}}",
+      "PBPName": "stc.packerbuild.activemq-consumer",
+      "warfile": "{{user `warfile`}}",
+      "JenkinsBuildURL": "{{user `BUILD_URL`}}",
+      "GitRepoURL": "{{user `GIT_URL`}}",
+      "GitBranch": "{{user `GIT_BRANCH`}}",
+      "GitCommitHash": "{{user `GIT_COMMIT`}}" 
+    }
+  }],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "startup.sh",
+      "destination": "/tmp/startup.sh"
+    }, 
+    {
+      "type": "shell",
+      "script": "./provision.sh",
+      "environment_vars": [
+        "customer={{user `customer`}}",
+        "warfile={{user `warfile`}}"
+      ]
+    }
+  ]
+}
